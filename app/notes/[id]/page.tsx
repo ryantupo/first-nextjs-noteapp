@@ -80,10 +80,10 @@ export default function NotePage({ params }: { params: { id: string } }) {
                 <button type="submit" className="w-full p-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition duration-200">
                     Update Note
                 </button>
+            </form>
             <button onClick={deleteNote} className="mt-2 w-full p-2 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition duration-200">
                 Delete Note
             </button>
-            </form>
         </div>
     );
     

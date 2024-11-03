@@ -1,66 +1,72 @@
-'use client';
+// CreateNote.tsx
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import PocketBase from 'pocketbase';
 
+interface CreateNoteProps {
+    isVisible: boolean;
+    onClose: () => void;
+    onNoteCreated: () => void;
+}
 
-export default function CreateNote() {
+export default function CreateNote({ isVisible, onClose, onNoteCreated }: CreateNoteProps) {
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
 
-    const router = useRouter();
+    const createNote = async (e) => {
+        e.preventDefault();
+        const db = new PocketBase('http://127.0.0.1:8090');
 
-    const create = async (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent page reload
+        await db.collection('notes').create({
+            title,
+            content,
+        });
 
-        try {
-            const res = await fetch('http://127.0.0.1:8090/api/collections/notes/records', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ title, content })
-            });
+        // Clear input fields
+        setTitle('');
+        setContent('');
 
-            if (!res.ok) throw new Error('Failed to create note');
-
-            setTitle('');
-            setContent('');
-            alert('Note created successfully!');
-            
-            router.refresh();
-
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    }
+        // Call the onNoteCreated callback to refresh notes
+        onNoteCreated();
+        onClose(); // Call the onClose to hide the create note form
+    };
 
     return (
-        <div className="flex items-center justify-center h-screen">
-            <form onSubmit={create} className="w-full max-w-md p-6 bg-white shadow-md rounded">
-                <h1 className="text-4xl font-bold text-center mb-10 text-gray-800">Create Note</h1>
-                <input
-                    type="text"
-                    placeholder="Title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    className="w-full p-2 mb-4 border border-gray-300 rounded"
-                />
-                <textarea
-                    cols={30}
-                    rows={10}
-                    placeholder="Content"
-                    value={content}
-                    onChange={(e) => setContent(e.target.value)}
-                    className="w-full p-2 mb-4 border border-gray-300 rounded"
-                ></textarea>
-                <button
-                    type="submit"
-                    className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                >
-                    Create
-                </button>
-            </form>
+        <div className={`absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 transition-all ${isVisible ? 'block' : 'hidden'}`}>
+            <div className="bg-white shadow-lg rounded-lg p-6 w-full max-w-md">
+                <h2 className="text-2xl font-semibold text-gray-800 mb-4">Create Note</h2>
+                <form onSubmit={createNote}>
+                    <input
+                        type="text"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Title"
+                        required
+                    />
+                    <textarea
+                        value={content}
+                        onChange={(e) => setContent(e.target.value)}
+                        className="w-full p-2 mb-4 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Content"
+                        rows={5}
+                        required
+                    ></textarea>
+                    <div>
+                        <button 
+                            type="submit" 
+                            className="w-full p-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
+                            Create Note
+                        </button>
+                        <button 
+                            type="button" 
+                            onClick={onClose} 
+                            className="w-full mt-2 p-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 transition">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     );
 }
